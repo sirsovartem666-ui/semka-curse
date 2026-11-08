@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Сёмка — Winter's Curse</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #1b2a4a 0%, #0a1220 70%, #05080f 100%);
+    font-family: 'Trebuchet MS', sans-serif;
+    color: #cfe6ff;
+  }
+
+  .scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: filter 0.4s;
+  }
+  .scene.frozen {
+    filter: saturate(0.6) brightness(1.05) hue-rotate(160deg);
+    animation: shake 0.15s 2;
+  }
+  @keyframes shake {
+    0% { transform: translate(0,0); }
+    50% { transform: translate(2px,-2px); }
+    100% { transform: translate(0,0); }
+  }
+
+  /* Центральная иконка ульты */
+  .ult {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    cursor: pointer;
+    background: radial-gradient(circle at 35% 30%, #aee9ff 0%, #4aa8e0 45%, #1a5f9e 75%, #0b2c4d 100%);
+    box-shadow: 0 0 40px #6fd0ff, 0 0 90px #2b7fc4 inset, 0 0 25px #bff0ff;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.3s;
+    user-select: none;
+    z-index: 10;
+    overflow: hidden;
+  }
+  .ult:hover {
+    transform: translate(-50%,-50%) scale(1.08);
+    box-shadow: 0 0 70px #bff0ff, 0 0 110px #2b7fc4 inset, 0 0 35px #ffffff;
+  }
+  .ult:active { transform: translate(-50%,-50%) scale(0.95); }
+
+  /* Картинка ульты внутри круга */
+  .ult img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+  }
+
+  .ult .label {
+    position: absolute;
+    bottom: -42px;
+    width: 100%;
+    text-align: center;
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: #9fd8ff;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px #2b7fc4;
+  }
+
+  /* Фотографии по углам */
+  .photo {
+    position: absolute;
+    width: 180px; height: 180px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 3px solid #4aa8e0;
+    box-shadow: 0 0 25px rgba(90,200,255,0.5);
+    background: #0c1a2c;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .photo:hover {
+    transform: scale(1.05) rotate(1deg);
+    box-shadow: 0 0 40px rgba(150,230,255,0.9);
+  }
+  .photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .photo .caption {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    background: rgba(0,20,40,0.75);
+    font-size: 12px;
+    text-align: center;
+    padding: 4px 2px;
+    color: #cfe6ff;
+    letter-spacing: 1px;
+  }
+  .tl { top: 25px; left: 25px; }
+  .tr { top: 25px; right: 25px; }
+  .bl { bottom: 25px; left: 25px; }
+  .br { bottom: 25px; right: 25px; }
+
+  .title {
+    position: absolute;
+    top: 14px; left: 50%;
+    transform: translateX(-50%);
+    font-size: 22px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: #bfeaff;
+    text-shadow: 0 0 12px #4aa8e0, 0 0 30px #1a5f9e;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .thaw {
+    position: absolute;
+    bottom: 22px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 60;
+    display: none;
+    padding: 12px 28px;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border: 2px solid #bfeaff;
+    border-radius: 30px;
+    background: rgba(20,60,100,0.85);
+    color: #eaffff;
+    cursor: pointer;
+    box-shadow: 0 0 20px #6fd0ff;
+    transition: transform 0.2s, background 0.3s;
+  }
+  .thaw:hover { transform: translateX(-50%) scale(1.07); background: rgba(40,100,160,0.95); }
+  .thaw.show { display: block; }
+
+  .ice-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s;
+    background:
+      radial-gradient(circle at 20% 30%, rgba(200,240,255,0.35) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(180,230,255,0.3) 0%, transparent 45%),
+      linear-gradient(135deg, rgba(160,220,255,0.25), rgba(90,160,220,0.15));
+  }
+  .ice-overlay.active { opacity: 1; }
+
+  .cracks {
+    position: absolute;
+    inset: 0;
+    z-index: 55;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s;
+  }
+  .cracks.active { opacity: 1; }
+  .cracks svg { width: 100%; height: 100%; }
+
+  .frost-dots {
+    position: absolute;
+    inset: 0;
+    z-index: 52;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.6s;
+    background-image:
+      radial-gradient(2px 2px at 10% 20%, #fff, transparent),
+      radial-gradient(2px 2px at 70% 40%, #eaffff, transparent),
+      radial-gradient(1.5px 1.5px at 40% 80%, #fff, transparent),
+      radial-gradient(2px 2px at 85% 15%, #cfefff, transparent),
+      radial-gradient(1.5px 1.5px at 25% 65%, #fff, transparent),
+      radial-gradient(2px 2px at 60% 90%, #eaffff, transparent);
+    background-size: 100% 100%;
+  }
+  .frost-dots.active { opacity: 0.9; }
+
+  .curse-text {
+    position: absolute;
+    top: 46%; left: 50%;
+    transform: translate(-50%,-50%) scale(0.7);
+    z-index: 70;
+    font-size: 42px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    text-transform: uppercase;
+    color: #ffffff;
+    text-shadow: 0 0 25px #6fd0ff, 0 0 60px #2b7fc4, 0 0 100px #1a5f9e;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s, transform 0.4s;
+    white-space: nowrap;
+  }
+  .curse-text.show {
+    opacity: 1;
+    transform: translate(-50%,-50%) scale(1);
+  }
+</style>
+</head>
+<body>
+
+<div class="scene" id="scene">
+
+  <div class="title">❄ Сёмка ❄ Winter's Curse ❄</div>
+
+  <!-- ===== 4 ФОТО СЁМКИ ===== -->
+  <div class="photo tl">
+    <img src="semka1.jpg" alt="Сёмка 1">
+    <div class="caption">Сёмка в дикой природе</div>
+  </div>
+  <div class="photo tr">
+    <img src="semka2.jpg" alt="Сёмка 2">
+    <div class="caption">Сёмка думает</div>
+  </div>
+  <div class="photo bl">
+    <img src="semka3.jpg" alt="Сёмка 3">
+    <div class="caption">Сёмка на работе</div>
+  </div>
+  <div class="photo br">
+    <img src="semka4.jpg" alt="Сёмка 4">
+    <div class="caption">Сёмка после ульты</div>
+  </div>
+
+  <!-- ===== ЦЕНТРАЛЬНАЯ ИКОНКА УЛЬТЫ ===== -->
+  <div class="ult" id="ult" title="Нажми, чтобы заморозить Сёмку">
+    <img src="ult.png" alt="Winter's Curse">
+    <div class="label">Winter's Curse</div>
+  </div>
+
+  <div class="curse-text" id="curseText">Сёмка заморожен!</div>
+
+  <div class="ice-overlay" id="iceOverlay"></div>
+  <div class="frost-dots" id="frostDots"></div>
+
+  <div class="cracks" id="cracks">
+    <svg viewBox="0 0 1000 700" preserveAspectRatio="none">
+      <g stroke="rgba(230,250,255,0.9)" fill="none" stroke-width="2" stroke-linecap="round">
+        <path d="M500 350 L620 180 L700 90 M620 180 L680 220"/>
+        <path d="M500 350 L300 220 L180 120 M300 220 L240 160"/>
+        <path d="M500 350 L360 520 L220 640 M360 520 L300 560"/>
+        <path d="M500 350 L680 480 L820 600 M680 480 L760 520"/>
+        <path d="M500 350 L520 120 L540 40 M520 120 L600 60"/>
+        <path d="M500 350 L480 580 L460 680 M480 580 L400 640"/>
+        <path d="M500 350 L850 300 L960 280 M850 300 L900 360"/>
+        <path d="M500 350 L150 400 L40 430 M150 400 L100 470"/>
+        <g stroke="rgba(200,240,255,0.6)" stroke-width="1">
+          <path d="M620 180 L560 140 L580 100"/>
+          <path d="M300 220 L340 180 L310 130"/>
+          <path d="M680 480 L640 540 L700 600"/>
+          <path d="M360 520 L400 480 L450 500"/>
+          <path d="M850 300 L880 240 L940 220"/>
+          <path d="M150 400 L120 340 L60 330"/>
+        </g>
+      </g>
+      <g fill="rgba(220,245,255,0.35)">
+        <polygon points="500,350 620,180 640,230"/>
+        <polygon points="500,350 360,520 320,470"/>
+        <polygon points="500,350 680,480 650,520"/>
+        <polygon points="500,350 300,220 270,270"/>
+      </g>
+    </svg>
+  </div>
+
+  <button class="thaw" id="thaw">🔥 Разморозить Сёмку</button>
+
+</div>
+
+<script>
+  const scene = document.getElementById('scene');
+  const ult = document.getElementById('ult');
+  const iceOverlay = document.getElementById('iceOverlay');
+  const frostDots = document.getElementById('frostDots');
+  const cracks = document.getElementById('cracks');
+  const curseText = document.getElementById('curseText');
+  const thaw = document.getElementById('thaw');
+
+  let frozen = false;
+
+  ult.addEventListener('click', () => {
+    if (frozen) return;
+    frozen = true;
+
+    scene.classList.add('frozen');
+    iceOverlay.classList.add('active');
+    frostDots.classList.add('active');
+    cracks.classList.add('active');
+    curseText.classList.add('show');
+
+    if (navigator.vibrate) navigator.vibrate([50, 30, 80]);
+
+    setTimeout(() => thaw.classList.add('show'), 400);
+  });
+
+  thaw.addEventListener('click', () => {
+    if (!frozen) return;
+    frozen = false;
+
+    scene.classList.remove('frozen');
+    iceOverlay.classList.remove('active');
+    frostDots.classList.remove('active');
+    cracks.classList.remove('active');
+    curseText.classList.remove('show');
+    thaw.classList.remove('show');
+  });
+</script>
+
+</body>
+</html>
